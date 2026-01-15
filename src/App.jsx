@@ -5,6 +5,7 @@ const CLIENT_PASSWORDS = {
   'demo2025': true,
   'sarah123': true,
   'james456': true,
+  'olamidejw012026': true,
 };
 
 // Navigation component
@@ -15,8 +16,8 @@ const TopNav = ({ currentPage, setCurrentPage, showNav }) => {
     <div className="fixed top-0 left-0 right-0 bg-cream border-b-4 border-teal-900 z-50">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-yellow-300 border-3 border-teal-900 rounded-xl flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(19,78,74,1)]">
-            <span className="text-xl">🦅</span>
+          <div className="w-10 h-10 bg-teal-500 border-3 border-teal-900 rounded-xl flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(19,78,74,1)]">
+            <span className="text-white font-black text-sm">JW</span>
           </div>
           <span className="font-black text-teal-900 text-lg hidden sm:block">Job Wingman</span>
         </div>
@@ -52,8 +53,8 @@ const TopNav = ({ currentPage, setCurrentPage, showNav }) => {
 const Wingman = ({ message }) => {
   return (
     <div className="relative bg-cream border-3 border-teal-800 rounded-2xl p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(19,78,74,1)]">
-      <div className="absolute -top-4 -left-2 w-10 h-10 bg-yellow-300 border-3 border-teal-800 rounded-full flex items-center justify-center text-lg shadow-[2px_2px_0px_0px_rgba(19,78,74,1)]">
-        🦅
+      <div className="absolute -top-4 -left-2 w-10 h-10 bg-teal-500 border-3 border-teal-800 rounded-full flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(19,78,74,1)]">
+        <span className="text-white font-black text-xs">JW</span>
       </div>
       <p className="text-teal-900 leading-relaxed ml-6">{message}</p>
     </div>
@@ -174,8 +175,18 @@ const SelectionCard = ({ title, price, subtitle, benefits, selected, onSelect, t
     
     <div className="flex justify-between items-start mb-2 mt-2">
       <h3 className="font-bold text-teal-900 text-lg pr-4">{title}</h3>
-      <div className="text-right flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0">
         <span className="text-2xl font-black text-teal-900">${price}</span>
+        <div className={`
+          w-6 h-6 rounded-full border-3 flex items-center justify-center transition-all
+          ${selected ? 'border-teal-800 bg-teal-500' : 'border-teal-300 bg-white'}
+        `}>
+          {selected && (
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
       </div>
     </div>
     
@@ -191,17 +202,6 @@ const SelectionCard = ({ title, price, subtitle, benefits, selected, onSelect, t
         ))}
       </div>
     )}
-    
-    <div className={`
-      absolute top-4 right-4 w-6 h-6 rounded-full border-3 flex items-center justify-center transition-all
-      ${selected ? 'border-teal-800 bg-teal-500' : 'border-teal-300 bg-white'}
-    `}>
-      {selected && (
-        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-        </svg>
-      )}
-    </div>
   </div>
 );
 
@@ -296,10 +296,13 @@ export default function JobWingmanPortal() {
   
   // Pricing flow state
   const [currentStep, setCurrentStep] = useState(-1);
+  const [flowType, setFlowType] = useState(null); // 'bundle' or 'custom'
+  const [selectedBundle, setSelectedBundle] = useState(null);
   const [resumeChoice, setResumeChoice] = useState(null);
   const [appMonths, setAppMonths] = useState(null);
   const [extraTitles, setExtraTitles] = useState(0);
   const [paymentChoice, setPaymentChoice] = useState('full');
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
   
   // Results page state
   const [showAllStories, setShowAllStories] = useState(false);
@@ -307,10 +310,12 @@ export default function JobWingmanPortal() {
   // Add-ons state
   const [addOns, setAddOns] = useState({
     tailored: { selected: false, option: 0 },
-    recruiter: { selected: false, option: 0 },
+    recruiterOutreach: { selected: false },
     informational: { selected: false, option: 0 },
     interview: { selected: false },
-    portfolio: { selected: false }
+    portfolio: { selected: false },
+    coverLetters: { selected: false, option: 0 },
+    networkWingman: { selected: false }
   });
 
   const handleLogin = () => {
@@ -348,29 +353,42 @@ export default function JobWingmanPortal() {
       id: 'none',
       title: 'My resume is ready to go',
       price: 0,
-      subtitle: 'You\'re getting interviews already, or you just had it professionally done.',
+      subtitle: 'You\'re already getting interviews, or you just had it professionally done.',
       benefits: ['We start applying right away', 'No changes to your current resume']
     },
     {
-      id: 'refine',
-      title: 'Quick Polish',
-      price: 149,
-      subtitle: 'Your resume is solid but could hit harder. We clean it up and add punch.',
+      id: 'audit',
+      title: 'Resume Audit',
+      price: 49,
+      subtitle: 'DIY with expert guidance. We review and tell you exactly what to fix.',
       benefits: [
-        'Fix formatting so it passes applicant tracking systems',
-        'Rewrite weak bullets to show real impact',
-        'Remove phrases that scream "AI wrote this"',
+        'Detailed feedback report within 48 hours',
+        'ATS compatibility check',
+        'AI detection cleanup recommendations',
+        'You make the edits yourself'
+      ],
+      tag: 'DIY'
+    },
+    {
+      id: 'refine',
+      title: 'Resume Tune-Up',
+      price: 149,
+      subtitle: 'Your resume exists but isn\'t landing. We fix what\'s broken.',
+      benefits: [
+        'ATS formatting fixes',
+        'AI phrase cleanup (remove ChatGPT-speak)',
+        'Rewrite weak bullets with real impact',
         'Done in 3-5 business days'
       ]
     },
     {
       id: 'rewrite-self',
-      title: 'Full Rebuild',
+      title: 'Full Resume Rewrite',
       price: 399,
-      subtitle: 'Start fresh. We dig into your experience and build something that actually represents what you\'ve done.',
+      subtitle: 'Start from scratch. We dig into your experience and build something new.',
       benefits: [
-        'Fill out a questionnaire about your work history',
-        'We pull out achievements you forgot about',
+        'Fill out our experience questionnaire',
+        'We extract achievements you forgot about',
         'Brand new resume built from scratch',
         '3-5 rounds of revisions until you love it'
       ],
@@ -378,14 +396,14 @@ export default function JobWingmanPortal() {
     },
     {
       id: 'rewrite-call',
-      title: 'Full Rebuild + Strategy Call',
+      title: 'Full Rewrite + Strategy Call',
       price: 549,
-      subtitle: 'Same as above, but we do the digging together on a call. Best for people who hate writing about themselves.',
+      subtitle: 'Same rebuild, but we do it together on a call. Best for people who hate writing about themselves.',
       benefits: [
         '45-minute call to talk through your experience',
         'We ask the questions, you just talk',
-        'Great for complex career paths or job hoppers',
-        'Includes positioning advice for your target roles'
+        'Great for career changers or complex backgrounds',
+        'Includes job targeting advice'
       ],
       tag: '1-on-1'
     }
@@ -397,17 +415,77 @@ export default function JobWingmanPortal() {
       { volume: '20 apps', price: 125 },
       { volume: '40 apps', price: 199 }
     ],
-    recruiter: [
-      { volume: '50 intros', price: 149 },
-      { volume: '100 intros', price: 249 },
-      { volume: '200 intros', price: 399 }
-    ],
     informational: [
       { volume: '10 intros', price: 99 },
       { volume: '20 intros', price: 149 },
       { volume: '40 intros', price: 249 }
+    ],
+    coverLetters: [
+      { volume: '5 letters', price: 49 },
+      { volume: '10 letters', price: 89 },
+      { volume: '20 letters', price: 149 }
     ]
   };
+
+  // Pre-built bundles (persona-based)
+  const bundles = [
+    {
+      id: 'autopilot',
+      name: 'Autopilot',
+      price: 199,
+      description: '"My resume is solid and I\'m already getting some interviews. I just need more volume."',
+      includes: [
+        '1 month of applications (400 apps)',
+        '1 job title'
+      ],
+      best: 'Resume ready, just need the legwork handled'
+    },
+    {
+      id: 'comeback',
+      name: 'Comeback',
+      price: 379,
+      description: '"I\'ve been applying for months with no results. Something isn\'t working."',
+      includes: [
+        'Resume tune-up (ATS check, AI cleanup, stronger bullets)',
+        '1 month of applications (400 apps)',
+        '1 job title'
+      ],
+      best: 'Stuck in a rut, need a reset'
+    },
+    {
+      id: 'fresh-start',
+      name: 'Fresh Start',
+      price: 649,
+      savings: 98,
+      description: '"I just got laid off. I need to rebuild and move fast."',
+      includes: [
+        'Full resume rewrite (we interview you, rebuild from scratch)',
+        '1 month of applications (400 apps)',
+        'Post-apply recruiter outreach',
+        '1 job title'
+      ],
+      best: 'Recently laid off, need momentum',
+      popular: true
+    },
+    {
+      id: 'visa-friendly',
+      name: 'Visa-Friendly',
+      price: 1299,
+      savings: 369,
+      description: '"I need sponsorship and have limited time. Every application has to count."',
+      includes: [
+        'Full resume rewrite (we interview you, rebuild from scratch)',
+        '2 months of applications (800 apps)',
+        '20 tailored applications',
+        '20 cover letters',
+        'Post-apply recruiter outreach',
+        'Network Wingman',
+        'Portfolio slides',
+        '1 job title'
+      ],
+      best: 'H1B, OPT, or work authorization with a deadline'
+    }
+  ];
 
   // Case studies data - clear before/after
   const caseStudies = [
@@ -460,6 +538,17 @@ export default function JobWingmanPortal() {
     let total = 0;
     let items = [];
     
+    // If a bundle is selected, use bundle pricing
+    if (flowType === 'bundle' && selectedBundle) {
+      const bundle = bundles.find(b => b.id === selectedBundle);
+      if (bundle) {
+        total = bundle.price;
+        items.push({ name: bundle.name + ' Bundle', price: bundle.price });
+        return { total, items };
+      }
+    }
+    
+    // Custom pricing calculation
     if (resumeChoice && resumeChoice !== 'none') {
       const resume = resumeOptions.find(r => r.id === resumeChoice);
       if (resume) {
@@ -485,10 +574,9 @@ export default function JobWingmanPortal() {
       total += opt.price;
       items.push({ name: `Tailored apps (${opt.volume})`, price: opt.price });
     }
-    if (addOns.recruiter.selected) {
-      const opt = addOnOptions.recruiter[addOns.recruiter.option];
-      total += opt.price;
-      items.push({ name: `Recruiter outreach (${opt.volume})`, price: opt.price });
+    if (addOns.recruiterOutreach.selected) {
+      total += 199;
+      items.push({ name: 'Post-apply recruiter outreach', price: 199 });
     }
     if (addOns.informational.selected) {
       const opt = addOnOptions.informational[addOns.informational.option];
@@ -502,6 +590,15 @@ export default function JobWingmanPortal() {
     if (addOns.portfolio.selected) {
       total += 199;
       items.push({ name: 'Portfolio slides', price: 199 });
+    }
+    if (addOns.coverLetters.selected) {
+      const opt = addOnOptions.coverLetters[addOns.coverLetters.option];
+      total += opt.price;
+      items.push({ name: `Cover letters (${opt.volume})`, price: opt.price });
+    }
+    if (addOns.networkWingman.selected) {
+      total += 99;
+      items.push({ name: 'Network Wingman', price: 99 });
     }
     
     return { total, items };
@@ -530,6 +627,13 @@ export default function JobWingmanPortal() {
   const paymentPlan = getPaymentPlan(total);
 
   // Custom styles
+  const styles = `
+    .bg-cream { background-color: #FFF8F0; }
+    .bg-coral { background-color: #FF6B6B; }
+    .text-coral { color: #FF6B6B; }
+    .border-coral { border-color: #FF6B6B; }
+    .border-3 { border-width: 3px; }
+  `;
 
   // Show nav only after name collection
   const showNav = authenticated && nameCollected;
@@ -538,7 +642,7 @@ export default function JobWingmanPortal() {
   if (!authenticated) {
     return (
       <>
-        
+        <style>{styles}</style>
         <div className="min-h-screen bg-teal-600 flex items-center justify-center p-4">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-20 h-20 border-4 border-white rounded-full" />
@@ -548,8 +652,8 @@ export default function JobWingmanPortal() {
           
           <div className="relative bg-cream border-4 border-teal-900 rounded-3xl shadow-[8px_8px_0px_0px_rgba(19,78,74,1)] p-8 w-full max-w-md">
             <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-yellow-300 border-4 border-teal-900 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] rotate-3 mx-auto">
-                <span className="text-4xl">🦅</span>
+              <div className="w-20 h-20 bg-teal-500 border-4 border-teal-900 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] rotate-3 mx-auto">
+                <span className="text-3xl font-black text-white">JW</span>
               </div>
               <h1 className="text-3xl font-black text-teal-900 mt-6">Job Wingman</h1>
               <p className="text-teal-600 mt-2">Your job search co-pilot</p>
@@ -595,7 +699,7 @@ export default function JobWingmanPortal() {
   if (!nameCollected) {
     return (
       <>
-        
+        <style>{styles}</style>
         <div className="min-h-screen bg-teal-600 flex items-center justify-center p-4">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-20 h-20 border-4 border-white rounded-full" />
@@ -660,7 +764,7 @@ export default function JobWingmanPortal() {
     
     return (
       <>
-        
+        <style>{styles}</style>
         <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
         
         <div className="min-h-screen bg-gradient-to-b from-teal-500 to-teal-600 pt-20 pb-12">
@@ -740,11 +844,11 @@ export default function JobWingmanPortal() {
     );
   }
 
-  // Pricing page - Welcome
+  // Pricing page - Welcome (choose bundle or custom)
   if (currentPage === 'pricing' && currentStep === -1) {
     return (
       <>
-        
+        <style>{styles}</style>
         <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
         
         <div className="min-h-screen bg-teal-600 flex items-center justify-center p-4 pt-20">
@@ -755,38 +859,172 @@ export default function JobWingmanPortal() {
                 <h1 className="text-4xl font-black text-teal-900 mb-2">
                   Hey {firstName}!
                 </h1>
-                <p className="text-xl text-teal-600">Let's build your package</p>
+                <p className="text-xl text-teal-600">How would you like to build your package?</p>
               </div>
               
-              <Wingman 
-                message={`This takes about 3 minutes. Pick what you need, skip what you don't. You'll see your total at the bottom as you go.`}
-              />
-              
-              <div className="grid md:grid-cols-2 gap-4 mb-8">
-                {[
-                  { num: 1, text: 'Resume situation', icon: '📄' },
-                  { num: 2, text: 'Application volume', icon: '🚀' },
-                  { num: 3, text: 'Optional add-ons', icon: '⚡' },
-                  { num: 4, text: 'Review your package', icon: '🎯' }
-                ].map((step) => (
-                  <div 
-                    key={step.num}
-                    className="flex items-center gap-3 bg-white border-3 border-teal-200 rounded-xl p-4"
-                  >
-                    <div className="w-10 h-10 bg-teal-100 border-2 border-teal-300 rounded-full flex items-center justify-center font-black text-teal-600">
-                      {step.num}
-                    </div>
-                    <span className="font-medium text-teal-800">{step.text}</span>
-                    <span className="ml-auto text-xl">{step.icon}</span>
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                {/* Bundle option */}
+                <button
+                  onClick={() => {
+                    setFlowType('bundle');
+                    setCurrentStep(-0.5);
+                  }}
+                  className="p-6 bg-white border-3 border-teal-200 rounded-2xl text-left hover:border-teal-500 hover:shadow-[4px_4px_0px_0px_rgba(19,78,74,0.3)] transition-all group"
+                >
+                  <div className="text-3xl mb-3">📦</div>
+                  <h3 className="font-bold text-teal-900 text-lg mb-1">Pick a Bundle</h3>
+                  <p className="text-teal-600 text-sm">Pre-built packages at a discount. Quick and easy.</p>
+                  <div className="mt-4 text-coral font-bold text-sm group-hover:translate-x-1 transition-transform">
+                    See bundles →
                   </div>
-                ))}
+                </button>
+                
+                {/* Custom option */}
+                <button
+                  onClick={() => {
+                    setFlowType('custom');
+                    setCurrentStep(0);
+                  }}
+                  className="p-6 bg-white border-3 border-teal-200 rounded-2xl text-left hover:border-teal-500 hover:shadow-[4px_4px_0px_0px_rgba(19,78,74,0.3)] transition-all group"
+                >
+                  <div className="text-3xl mb-3">🛠️</div>
+                  <h3 className="font-bold text-teal-900 text-lg mb-1">Build Custom</h3>
+                  <p className="text-teal-600 text-sm">Pick exactly what you need, skip what you don't.</p>
+                  <div className="mt-4 text-coral font-bold text-sm group-hover:translate-x-1 transition-transform">
+                    Start building →
+                  </div>
+                </button>
               </div>
+              
+              <p className="text-center text-teal-500 text-sm">
+                Not sure? Bundles are a great starting point.
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Pricing page - Bundle Selection (step -0.5)
+  if (currentPage === 'pricing' && currentStep === -0.5) {
+    return (
+      <>
+        <style>{styles}</style>
+        <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
+        
+        <div className="min-h-screen bg-gradient-to-b from-teal-500 to-teal-600 pt-20 pb-12">
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-black text-white mb-2">Pick Your Bundle</h1>
+              <p className="text-teal-100">Pre-built packages with built-in savings</p>
+            </div>
+            
+            <div className="space-y-4 mb-8">
+              {bundles.map((bundle) => (
+                <div
+                  key={bundle.id}
+                  onClick={() => setSelectedBundle(bundle.id)}
+                  className={`
+                    relative p-6 rounded-2xl border-3 cursor-pointer transition-all
+                    ${selectedBundle === bundle.id
+                      ? 'bg-teal-50 border-teal-800 shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] translate-x-[-2px] translate-y-[-2px]'
+                      : 'bg-white border-teal-200 hover:border-teal-400'
+                    }
+                  `}
+                >
+                  {bundle.popular && (
+                    <div className="absolute -top-3 left-4">
+                      <Sticker color="coral" rotate={-2}>Most Popular</Sticker>
+                    </div>
+                  )}
+                  {bundle.savings && (
+                    <div className="absolute -top-3 right-4">
+                      <Sticker color="yellow" rotate={2}>Save ${bundle.savings}</Sticker>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-start mb-4 mt-2">
+                    <div className="flex-1 pr-4">
+                      <h3 className="font-bold text-teal-900 text-xl">{bundle.name}</h3>
+                      <p className="text-teal-600 text-sm mt-1">{bundle.description}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl font-black text-teal-900">${bundle.price}</span>
+                      <div className={`
+                        w-6 h-6 rounded-full border-3 flex items-center justify-center transition-all flex-shrink-0
+                        ${selectedBundle === bundle.id ? 'border-teal-800 bg-teal-500' : 'border-teal-300 bg-white'}
+                      `}>
+                        {selectedBundle === bundle.id && (
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-teal-50 rounded-xl p-4 mb-3">
+                    <p className="text-xs font-bold text-teal-500 uppercase mb-2">Includes:</p>
+                    <ul className="space-y-1">
+                      {bundle.includes.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-teal-700">
+                          <span className="text-coral">✓</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <p className="text-xs text-teal-500">
+                    <span className="font-bold">Best for:</span> {bundle.best}
+                  </p>
+                </div>
+              ))}
+            </div>
+            
+            {/* Or customize link */}
+            <div className="text-center mb-8">
+              <button
+                onClick={() => {
+                  setFlowType('custom');
+                  setSelectedBundle(null);
+                  setCurrentStep(0);
+                }}
+                className="text-teal-100 hover:text-white transition text-sm"
+              >
+                Want something different? Build a custom package →
+              </button>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className="fixed bottom-0 left-0 right-0 bg-cream border-t-4 border-teal-900 p-4">
+            <div className="max-w-3xl mx-auto flex items-center justify-between">
+              <button
+                onClick={() => setCurrentStep(-1)}
+                className="px-6 py-3 font-bold text-teal-600 hover:text-teal-800 transition"
+              >
+                ← Back
+              </button>
               
               <button
-                onClick={() => setCurrentStep(0)}
-                className="w-full bg-coral hover:bg-red-400 text-white border-3 border-teal-900 py-4 rounded-xl font-bold text-lg shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] hover:shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all"
+                disabled={!selectedBundle}
+                onClick={() => {
+                  if (selectedBundle) {
+                    setCurrentStep(2); // Go to add-ons so they can add extras to their bundle
+                  }
+                }}
+                className={`px-8 py-4 rounded-xl font-black text-lg border-3 transition-all ${
+                  selectedBundle
+                    ? 'bg-coral border-teal-900 text-white shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] hover:shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
+                    : 'bg-teal-200 border-teal-300 text-teal-400 cursor-not-allowed'
+                }`}
               >
-                Start Building
+                {selectedBundle 
+                  ? `Continue with ${bundles.find(b => b.id === selectedBundle)?.name}`
+                  : 'Select a bundle'}
               </button>
             </div>
           </div>
@@ -795,49 +1033,87 @@ export default function JobWingmanPortal() {
     );
   }
 
-  // Page wrapper for pricing steps
-  const PageWrapper = ({ children, onBack, onNext, nextLabel, nextDisabled }) => (
-    <>
-      
-      <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
-      
-      <div className="min-h-screen bg-gradient-to-b from-teal-500 to-teal-600 pt-20 pb-32">
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          {children}
-        </div>
+  // UPDATED: Page wrapper with friendlier bottom bar showing breakdown
+  const PageWrapper = ({ children, onBack, onNext, nextLabel, nextDisabled }) => {
+    const [showBreakdown, setShowBreakdown] = useState(false);
+    
+    return (
+      <>
+        <style>{styles}</style>
+        <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
         
-        <div className="fixed bottom-0 left-0 right-0 bg-cream border-t-4 border-teal-900 p-4">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            <button
-              onClick={onBack}
-              className="px-6 py-3 font-bold text-teal-600 hover:text-teal-800 transition"
-            >
-              ← Back
-            </button>
+        <div className="min-h-screen bg-gradient-to-b from-teal-500 to-teal-600 pt-20 pb-40">
+          <div className="max-w-3xl mx-auto px-4 py-8">
+            {children}
+          </div>
+          
+          {/* UPDATED: Friendlier bottom bar with expandable breakdown */}
+          <div className="fixed bottom-0 left-0 right-0 bg-cream border-t-4 border-teal-900">
+            {/* Expandable breakdown section */}
+            {showBreakdown && items.length > 0 && (
+              <div className="border-b-2 border-teal-200 p-4 max-w-3xl mx-auto">
+                <div className="space-y-2">
+                  {items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-teal-700">{item.name}</span>
+                      <span className="font-bold text-teal-900">${item.price}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
-            <div className="text-center">
-              <p className="text-xs text-teal-500 uppercase tracking-wide font-bold">Your Total</p>
-              <p className="text-3xl font-black text-teal-900">{total > 0 ? `$${total.toLocaleString()}` : '$0'}</p>
+            <div className="p-4">
+              <div className="max-w-3xl mx-auto flex items-center justify-between">
+                <button
+                  onClick={onBack}
+                  className="px-6 py-3 font-bold text-teal-600 hover:text-teal-800 transition"
+                >
+                  ← Back
+                </button>
+                
+                {/* Friendlier total display */}
+                <button 
+                  onClick={() => items.length > 0 && setShowBreakdown(!showBreakdown)}
+                  className="text-center group"
+                >
+                  {total > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="text-xs text-teal-500 font-medium">
+                          {items.length} item{items.length !== 1 ? 's' : ''} selected
+                        </p>
+                        <p className="text-xl font-bold text-teal-900">${total.toLocaleString()}</p>
+                      </div>
+                      <span className="text-teal-400 group-hover:text-teal-600 transition">
+                        {showBreakdown ? '▼' : '▲'}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-teal-400 text-sm">Nothing selected yet</p>
+                  )}
+                </button>
+                
+                <button
+                  onClick={onNext}
+                  disabled={nextDisabled}
+                  className={`
+                    px-8 py-3 rounded-xl font-bold border-3 transition-all
+                    ${nextDisabled
+                      ? 'bg-teal-100 border-teal-200 text-teal-300 cursor-not-allowed'
+                      : 'bg-coral border-teal-900 text-white shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] hover:shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
+                    }
+                  `}
+                >
+                  {nextLabel}
+                </button>
+              </div>
             </div>
-            
-            <button
-              onClick={onNext}
-              disabled={nextDisabled}
-              className={`
-                px-8 py-3 rounded-xl font-bold border-3 transition-all
-                ${nextDisabled
-                  ? 'bg-teal-100 border-teal-200 text-teal-300 cursor-not-allowed'
-                  : 'bg-coral border-teal-900 text-white shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] hover:shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
-                }
-              `}
-            >
-              {nextLabel}
-            </button>
           </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+    );
+  };
 
   // Step 0: Resume
   if (currentPage === 'pricing' && currentStep === 0) {
@@ -1012,15 +1288,38 @@ export default function JobWingmanPortal() {
               onOptionSelect={(opt) => setAddOnOption('tailored', opt)}
             />
             
-            <AddOnCard
-              title="📬 Recruiter Outreach"
-              subtitle="We reach out to recruiters at your target companies before you even apply. Gets you on their radar."
-              options={addOnOptions.recruiter}
-              selected={addOns.recruiter.selected}
-              onSelect={() => toggleAddOn('recruiter')}
-              selectedOption={addOns.recruiter.option}
-              onOptionSelect={(opt) => setAddOnOption('recruiter', opt)}
-            />
+            {/* Post-apply recruiter outreach - flat fee */}
+            <div className={`
+              p-5 rounded-2xl border-3 transition-all
+              ${addOns.recruiterOutreach.selected 
+                ? 'bg-teal-50 border-teal-800 shadow-[4px_4px_0px_0px_rgba(19,78,74,1)]' 
+                : 'bg-white border-teal-200'
+              }
+            `}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pr-4">
+                  <h3 className="font-bold text-teal-900">📬 Post-Apply Recruiter Outreach</h3>
+                  <p className="text-teal-600 text-sm mt-1">
+                    After every application we submit, we find the recruiter and reach out on your behalf. Warm intros that get you noticed.
+                  </p>
+                  <div className="mt-2">
+                    <Sticker color="teal">$199/mo</Sticker>
+                  </div>
+                </div>
+                <button
+                  onClick={() => toggleAddOn('recruiterOutreach')}
+                  className={`
+                    px-4 py-2 rounded-xl text-sm font-bold border-3 transition-all flex-shrink-0
+                    ${addOns.recruiterOutreach.selected 
+                      ? 'bg-coral border-teal-800 text-white shadow-[2px_2px_0px_0px_rgba(19,78,74,1)]' 
+                      : 'bg-cream border-teal-300 text-teal-700 hover:border-teal-500'
+                    }
+                  `}
+                >
+                  {addOns.recruiterOutreach.selected ? 'Added ✓' : '+ Add'}
+                </button>
+              </div>
+            </div>
             
             <AddOnCard
               title="🤝 Referral Intros"
@@ -1095,6 +1394,50 @@ export default function JobWingmanPortal() {
                 </button>
               </div>
             </div>
+            
+            {/* Cover Letters */}
+            <AddOnCard
+              title="✉️ Cover Letters"
+              subtitle="Custom cover letters tailored to specific jobs. Pairs well with tailored applications."
+              options={addOnOptions.coverLetters}
+              selected={addOns.coverLetters.selected}
+              onSelect={() => toggleAddOn('coverLetters')}
+              selectedOption={addOns.coverLetters.option}
+              onOptionSelect={(opt) => setAddOnOption('coverLetters', opt)}
+            />
+            
+            {/* Network Wingman */}
+            <div className={`
+              p-5 rounded-2xl border-3 transition-all
+              ${addOns.networkWingman.selected 
+                ? 'bg-teal-50 border-teal-800 shadow-[4px_4px_0px_0px_rgba(19,78,74,1)]' 
+                : 'bg-white border-teal-200'
+              }
+            `}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pr-4">
+                  <h3 className="font-bold text-teal-900">🔗 Network Wingman</h3>
+                  <p className="text-teal-600 text-sm mt-1">
+                    We analyze your LinkedIn connections and tell you exactly who to reach out to — warm intros, hiring managers, and people who can refer you.
+                  </p>
+                  <div className="mt-2">
+                    <Sticker color="teal">$99 one-time</Sticker>
+                  </div>
+                </div>
+                <button
+                  onClick={() => toggleAddOn('networkWingman')}
+                  className={`
+                    px-4 py-2 rounded-xl text-sm font-bold border-3 transition-all flex-shrink-0
+                    ${addOns.networkWingman.selected 
+                      ? 'bg-coral border-teal-800 text-white shadow-[2px_2px_0px_0px_rgba(19,78,74,1)]' 
+                      : 'bg-cream border-teal-300 text-teal-700 hover:border-teal-500'
+                    }
+                  `}
+                >
+                  {addOns.networkWingman.selected ? 'Added ✓' : '+ Add'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </PageWrapper>
@@ -1102,10 +1445,12 @@ export default function JobWingmanPortal() {
   }
 
   // Step 3: Review
-  if (currentPage === 'pricing' && currentStep === 3) {
+  if (currentPage === 'pricing' && currentStep === 3 && !orderConfirmed) {
+    const selectedBundleData = flowType === 'bundle' && selectedBundle ? bundles.find(b => b.id === selectedBundle) : null;
+    
     return (
       <>
-        
+        <style>{styles}</style>
         <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
         
         <div className="min-h-screen bg-gradient-to-b from-teal-500 to-teal-600 pt-20 pb-32">
@@ -1126,7 +1471,30 @@ export default function JobWingmanPortal() {
               {/* Summary */}
               <div className="bg-white border-3 border-teal-200 rounded-2xl overflow-hidden mb-6">
                 <div className="p-5">
-                  {items.length === 0 ? (
+                  {selectedBundleData ? (
+                    <>
+                      <div className="flex justify-between items-center mb-4 pb-4 border-b border-teal-200">
+                        <div>
+                          <h3 className="font-bold text-teal-900 text-lg">{selectedBundleData.name} Bundle</h3>
+                          {selectedBundleData.savings && (
+                            <span className="text-xs bg-yellow-300 text-teal-900 px-2 py-1 rounded-full font-bold">
+                              Saving ${selectedBundleData.savings}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-black text-teal-900 text-2xl">${selectedBundleData.price}</span>
+                      </div>
+                      <p className="text-xs font-bold text-teal-500 uppercase mb-2">Includes:</p>
+                      <ul className="space-y-2">
+                        {selectedBundleData.includes.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-teal-700">
+                            <span className="text-coral">✓</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : items.length === 0 ? (
                     <p className="text-teal-500 text-center py-4">Nothing selected yet</p>
                   ) : (
                     <div className="space-y-3">
@@ -1227,7 +1595,13 @@ export default function JobWingmanPortal() {
           <div className="fixed bottom-0 left-0 right-0 bg-cream border-t-4 border-teal-900 p-4">
             <div className="max-w-3xl mx-auto flex items-center justify-between">
               <button
-                onClick={() => setCurrentStep(2)}
+                onClick={() => {
+                  if (flowType === 'bundle') {
+                    setCurrentStep(-0.5); // Go back to bundle selection
+                  } else {
+                    setCurrentStep(2); // Go back to add-ons
+                  }
+                }}
                 className="px-6 py-3 font-bold text-teal-600 hover:text-teal-800 transition"
               >
                 ← Back
@@ -1235,6 +1609,7 @@ export default function JobWingmanPortal() {
               
               <button
                 disabled={total === 0}
+                onClick={() => total > 0 && setOrderConfirmed(true)}
                 className={`px-8 py-4 rounded-xl font-black text-lg border-3 transition-all ${
                   total > 0
                     ? 'bg-coral border-teal-900 text-white shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] hover:shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
@@ -1246,6 +1621,140 @@ export default function JobWingmanPortal() {
                     ? `Confirm - $${total}` 
                     : `Confirm - $${paymentPlan.deposit} today`
                   : 'Select something first'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Order Confirmed - Payment Screen
+  if (currentPage === 'pricing' && orderConfirmed) {
+    const amountDue = paymentChoice === 'full' ? total : paymentPlan.deposit;
+    
+    return (
+      <>
+        <style>{styles}</style>
+        <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
+        
+        <div className="min-h-screen bg-gradient-to-b from-teal-500 to-teal-600 pt-20 pb-12">
+          <div className="max-w-2xl mx-auto px-4 py-8">
+            
+            {/* Success header */}
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-yellow-300 border-4 border-teal-900 rounded-full flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] mx-auto mb-4">
+                <span className="text-4xl">🎉</span>
+              </div>
+              <h1 className="text-3xl font-black text-white mb-2">You're almost there, {firstName}!</h1>
+              <p className="text-teal-100">One last step: send your payment to lock in your spot.</p>
+            </div>
+            
+            {/* Payment card */}
+            <div className="bg-cream border-4 border-teal-900 rounded-3xl shadow-[8px_8px_0px_0px_rgba(19,78,74,1)] p-6 md:p-8 mb-6">
+              
+              {/* Amount due */}
+              <div className="bg-teal-500 rounded-2xl p-6 mb-6 text-center">
+                <p className="text-teal-100 text-sm uppercase tracking-wide font-bold mb-1">
+                  {paymentChoice === 'full' ? 'Total Due' : 'Deposit Due Today'}
+                </p>
+                <p className="text-5xl font-black text-white">${amountDue}</p>
+                {paymentChoice === 'plan' && (
+                  <p className="text-teal-100 text-sm mt-2">
+                    Then {paymentPlan.installments} payments of ${paymentPlan.perInstallment} after we start
+                  </p>
+                )}
+              </div>
+              
+              {/* Zelle instructions */}
+              <div className="bg-white border-3 border-teal-200 rounded-2xl p-5 mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white font-black text-lg">Z</span>
+                  </div>
+                  <div>
+                    <h3 className="font-black text-teal-900">Pay with Zelle</h3>
+                    <p className="text-teal-500 text-sm">Fastest option - no fees</p>
+                  </div>
+                </div>
+                
+                <div className="bg-teal-50 rounded-xl p-4 mb-4">
+                  <p className="text-sm text-teal-600 mb-2">Send to:</p>
+                  <p className="text-xl font-black text-teal-900 mb-1">(628) 228-1964</p>
+                  <p className="text-teal-500 text-sm">Will show as "Chisom Egwuatu"</p>
+                </div>
+                
+                <div className="bg-yellow-100 border-2 border-yellow-400 rounded-xl p-4">
+                  <p className="text-sm font-bold text-teal-900 mb-1">📝 Important: Include this memo</p>
+                  <p className="font-mono bg-white px-3 py-2 rounded-lg text-teal-900 border border-yellow-400">
+                    JW Deposit
+                  </p>
+                </div>
+              </div>
+              
+              {/* Alternative payment */}
+              <div className="text-center mb-6">
+                <p className="text-teal-500 text-sm mb-2">Don't have Zelle?</p>
+                <div className="flex justify-center gap-3">
+                  <a href="https://paypal.me/jobwingman" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-white border-2 border-teal-200 rounded-xl text-teal-700 font-medium text-sm hover:border-teal-400 transition">
+                    PayPal
+                  </a>
+                  <a href="https://venmo.com/jobwingman" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-white border-2 border-teal-200 rounded-xl text-teal-700 font-medium text-sm hover:border-teal-400 transition">
+                    Venmo
+                  </a>
+                </div>
+              </div>
+              
+              {/* Order summary */}
+              <div className="border-t-2 border-teal-100 pt-6">
+                <h4 className="font-bold text-teal-900 mb-3">Your Package</h4>
+                <div className="space-y-2">
+                  {items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-teal-600">{item.name}</span>
+                      <span className="font-bold text-teal-900">${item.price}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between pt-2 border-t border-teal-100">
+                    <span className="font-bold text-teal-900">Total</span>
+                    <span className="font-black text-teal-900">${total}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* What happens next */}
+            <div className="bg-white/10 rounded-2xl p-6">
+              <h4 className="font-bold text-white mb-4">What happens after you pay?</h4>
+              <ol className="space-y-3">
+                <li className="flex gap-3 text-teal-100">
+                  <span className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-teal-900 font-bold text-sm flex-shrink-0">1</span>
+                  <span>Your payment will be confirmed within a few hours</span>
+                </li>
+                <li className="flex gap-3 text-teal-100">
+                  <span className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-teal-900 font-bold text-sm flex-shrink-0">2</span>
+                  <span>You'll get an onboarding form to fill out (target roles, preferences, etc.)</span>
+                </li>
+                <li className="flex gap-3 text-teal-100">
+                  <span className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-teal-900 font-bold text-sm flex-shrink-0">3</span>
+                  <span>We start within 48 hours of receiving your form</span>
+                </li>
+              </ol>
+            </div>
+            
+            {/* Questions */}
+            <div className="text-center mt-8">
+              <p className="text-teal-100 mb-2">Questions? Text or email me</p>
+              <p className="text-white font-bold">chisom@thejobwingman.com</p>
+            </div>
+            
+            {/* Back button */}
+            <div className="text-center mt-6">
+              <button
+                onClick={() => setOrderConfirmed(false)}
+                className="text-teal-200 hover:text-white transition text-sm"
+              >
+                ← Go back and edit my package
               </button>
             </div>
           </div>
