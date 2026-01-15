@@ -543,37 +543,37 @@ export default function JobWingmanPortal() {
     let total = 0;
     let items = [];
     
-    // If a bundle is selected, use bundle pricing
+    // If a bundle is selected, start with bundle pricing
     if (flowType === 'bundle' && selectedBundle) {
       const bundle = bundles.find(b => b.id === selectedBundle);
       if (bundle) {
         total = bundle.price;
         items.push({ name: bundle.name + ' Bundle', price: bundle.price });
-        return { total, items };
+      }
+    } else {
+      // Custom pricing calculation
+      if (resumeChoice && resumeChoice !== 'none') {
+        const resume = resumeOptions.find(r => r.id === resumeChoice);
+        if (resume) {
+          total += resume.price;
+          items.push({ name: resume.title, price: resume.price });
+        }
+      }
+      
+      if (extraTitles > 0) {
+        const extraCost = extraTitles * 99;
+        total += extraCost;
+        items.push({ name: `${extraTitles} extra job title${extraTitles > 1 ? 's' : ''}`, price: extraCost });
+      }
+      
+      if (appMonths) {
+        const appCost = appMonths * 199;
+        total += appCost;
+        items.push({ name: `${appMonths} month${appMonths > 1 ? 's' : ''} of applications`, price: appCost });
       }
     }
     
-    // Custom pricing calculation
-    if (resumeChoice && resumeChoice !== 'none') {
-      const resume = resumeOptions.find(r => r.id === resumeChoice);
-      if (resume) {
-        total += resume.price;
-        items.push({ name: resume.title, price: resume.price });
-      }
-    }
-    
-    if (extraTitles > 0) {
-      const extraCost = extraTitles * 99;
-      total += extraCost;
-      items.push({ name: `${extraTitles} extra job title${extraTitles > 1 ? 's' : ''}`, price: extraCost });
-    }
-    
-    if (appMonths) {
-      const appCost = appMonths * 199;
-      total += appCost;
-      items.push({ name: `${appMonths} month${appMonths > 1 ? 's' : ''} of applications`, price: appCost });
-    }
-    
+    // Add-ons apply to both bundles and custom
     if (addOns.tailored.selected) {
       const opt = addOnOptions.tailored[addOns.tailored.option];
       total += opt.price;
@@ -1490,7 +1490,7 @@ export default function JobWingmanPortal() {
                         <span className="font-black text-teal-900 text-2xl">${selectedBundleData.price}</span>
                       </div>
                       <p className="text-xs font-bold text-teal-500 uppercase mb-2">Includes:</p>
-                      <ul className="space-y-2">
+                      <ul className="space-y-2 mb-4">
                         {selectedBundleData.includes.map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm text-teal-700">
                             <span className="text-coral">✓</span>
@@ -1498,6 +1498,20 @@ export default function JobWingmanPortal() {
                           </li>
                         ))}
                       </ul>
+                      {/* Show add-ons if any selected */}
+                      {items.length > 1 && (
+                        <>
+                          <p className="text-xs font-bold text-teal-500 uppercase mb-2 pt-4 border-t border-teal-200">Add-ons:</p>
+                          <div className="space-y-2">
+                            {items.slice(1).map((item, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-sm">
+                                <span className="text-teal-700">{item.name}</span>
+                                <span className="font-bold text-teal-900">+${item.price}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </>
                   ) : items.length === 0 ? (
                     <p className="text-teal-500 text-center py-4">Nothing selected yet</p>
