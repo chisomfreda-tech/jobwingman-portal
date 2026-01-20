@@ -304,6 +304,12 @@ export default function JobWingmanPortal() {
   const [paymentChoice, setPaymentChoice] = useState('full');
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   
+  // Agreement flow state
+  const [showAgreement, setShowAgreement] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [clientEmail, setClientEmail] = useState('');
+  const [showTerms, setShowTerms] = useState(false);
+  
   // Results page state
   const [showAllStories, setShowAllStories] = useState(false);
   
@@ -321,7 +327,7 @@ export default function JobWingmanPortal() {
   // Scroll to top when page or step changes
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentPage, currentStep, authenticated, nameCollected, orderConfirmed]);
+  }, [currentPage, currentStep, authenticated, nameCollected, orderConfirmed, showAgreement]);
 
   const handleLogin = () => {
     if (CLIENT_PASSWORDS[password.toLowerCase().trim()]) {
@@ -1293,48 +1299,50 @@ export default function JobWingmanPortal() {
               onOptionSelect={(opt) => setAddOnOption('tailored', opt)}
             />
             
-            {/* Post-apply recruiter outreach - flat fee */}
-            <div className={`
-              p-5 rounded-2xl border-3 transition-all
-              ${addOns.recruiterOutreach.selected 
-                ? 'bg-teal-50 border-teal-800 shadow-[4px_4px_0px_0px_rgba(19,78,74,1)]' 
-                : 'bg-white border-teal-200'
-              }
-            `}>
+            {/* Post-apply recruiter outreach - COMING SOON */}
+            <div className="p-5 rounded-2xl border-3 bg-gray-50 border-gray-200 opacity-60">
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
-                  <h3 className="font-bold text-teal-900">📬 Post-Apply Recruiter Outreach</h3>
-                  <p className="text-teal-600 text-sm mt-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-gray-500">📬 Post-Apply Recruiter Outreach</h3>
+                    <span className="bg-yellow-300 text-teal-900 text-xs font-bold px-2 py-0.5 rounded-full border border-teal-800">Coming Soon</span>
+                  </div>
+                  <p className="text-gray-400 text-sm mt-1">
                     After every application we submit, we find the recruiter and reach out on your behalf. Warm intros that get you noticed.
                   </p>
                   <div className="mt-2">
-                    <Sticker color="teal">$199/mo</Sticker>
+                    <span className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide border-2 rounded-full bg-gray-200 text-gray-400 border-gray-300">$199/mo</span>
                   </div>
                 </div>
                 <button
-                  onClick={() => toggleAddOn('recruiterOutreach')}
-                  className={`
-                    px-4 py-2 rounded-xl text-sm font-bold border-3 transition-all flex-shrink-0
-                    ${addOns.recruiterOutreach.selected 
-                      ? 'bg-coral border-teal-800 text-white shadow-[2px_2px_0px_0px_rgba(19,78,74,1)]' 
-                      : 'bg-cream border-teal-300 text-teal-700 hover:border-teal-500'
-                    }
-                  `}
+                  disabled
+                  className="px-4 py-2 rounded-xl text-sm font-bold border-3 bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed flex-shrink-0"
                 >
-                  {addOns.recruiterOutreach.selected ? 'Added ✓' : '+ Add'}
+                  + Add
                 </button>
               </div>
             </div>
             
-            <AddOnCard
-              title="🤝 Referral Intros"
-              subtitle="We help you connect with people at target companies who can refer you internally. Referrals are 4x more likely to get hired."
-              options={addOnOptions.informational}
-              selected={addOns.informational.selected}
-              onSelect={() => toggleAddOn('informational')}
-              selectedOption={addOns.informational.option}
-              onOptionSelect={(opt) => setAddOnOption('informational', opt)}
-            />
+            {/* Referral Intros - COMING SOON */}
+            <div className="p-5 rounded-2xl border-3 bg-gray-50 border-gray-200 opacity-60">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pr-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-gray-500">🤝 Referral Intros</h3>
+                    <span className="bg-yellow-300 text-teal-900 text-xs font-bold px-2 py-0.5 rounded-full border border-teal-800">Coming Soon</span>
+                  </div>
+                  <p className="text-gray-400 text-sm mt-1">
+                    We help you connect with people at target companies who can refer you internally. Referrals are 4x more likely to get hired.
+                  </p>
+                </div>
+                <button
+                  disabled
+                  className="px-4 py-2 rounded-xl text-sm font-bold border-3 bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed flex-shrink-0"
+                >
+                  + Add
+                </button>
+              </div>
+            </div>
             
             <div className={`
               p-5 rounded-2xl border-3 transition-all
@@ -1450,7 +1458,7 @@ export default function JobWingmanPortal() {
   }
 
   // Step 3: Review
-  if (currentPage === 'pricing' && currentStep === 3 && !orderConfirmed) {
+  if (currentPage === 'pricing' && currentStep === 3 && !orderConfirmed && !showAgreement) {
     const selectedBundleData = flowType === 'bundle' && selectedBundle ? bundles.find(b => b.id === selectedBundle) : null;
     
     return (
@@ -1628,7 +1636,7 @@ export default function JobWingmanPortal() {
               
               <button
                 disabled={total === 0}
-                onClick={() => total > 0 && setOrderConfirmed(true)}
+                onClick={() => total > 0 && setShowAgreement(true)}
                 className={`px-8 py-4 rounded-xl font-black text-lg border-3 transition-all ${
                   total > 0
                     ? 'bg-coral border-teal-900 text-white shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] hover:shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
@@ -1637,11 +1645,183 @@ export default function JobWingmanPortal() {
               >
                 {total > 0 
                   ? paymentChoice === 'full' 
-                    ? `Confirm - $${total}` 
-                    : `Confirm - $${paymentPlan.deposit} today`
+                    ? `Continue - $${total}` 
+                    : `Continue - $${paymentPlan.deposit} deposit`
                   : 'Select something first'}
               </button>
             </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Agreement Screen
+  if (currentPage === 'pricing' && showAgreement && !orderConfirmed) {
+    const today = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    return (
+      <>
+        <style>{styles}</style>
+        <TopNav currentPage={currentPage} setCurrentPage={setCurrentPage} showNav={showNav} />
+        
+        <div className="min-h-screen bg-gradient-to-b from-teal-500 to-teal-600 pt-20 pb-12">
+          <div className="max-w-2xl mx-auto px-4 py-8">
+            
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-cream border-4 border-teal-900 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] rotate-3 mx-auto">
+                <span className="text-teal-900 font-black text-xl">📝</span>
+              </div>
+              <h1 className="text-2xl font-black text-white mt-4">Review & Agree</h1>
+              <p className="text-teal-100">Almost there, {firstName}! Review your package and terms.</p>
+            </div>
+
+            {/* Order Summary Card */}
+            <div className="bg-cream border-4 border-teal-900 rounded-2xl p-6 shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] mb-6">
+              <h2 className="font-black text-teal-900 text-lg mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 bg-yellow-300 border-2 border-teal-900 rounded-lg flex items-center justify-center">📋</span>
+                Your Package
+              </h2>
+
+              <div className="space-y-3">
+                {items.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center py-3 border-b border-teal-100 last:border-0">
+                    <div>
+                      <p className="font-bold text-teal-900">{item.name}</p>
+                    </div>
+                    <p className="font-black text-teal-900">${item.price}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-teal-200">
+                <p className="text-xl font-black text-teal-900">Total</p>
+                <p className="text-2xl font-black text-teal-900">${total}</p>
+              </div>
+              
+              {paymentChoice === 'plan' && (
+                <p className="text-sm text-teal-600 mt-2">
+                  Payment plan: ${paymentPlan.deposit} deposit, then {paymentPlan.installments} payments of ${paymentPlan.perInstallment}
+                </p>
+              )}
+            </div>
+
+            {/* Service Agreement Card */}
+            <div className="bg-cream border-4 border-teal-900 rounded-2xl p-6 shadow-[6px_6px_0px_0px_rgba(19,78,74,1)] mb-6">
+              <h2 className="font-black text-teal-900 text-lg mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 bg-yellow-300 border-2 border-teal-900 rounded-lg flex items-center justify-center">✍️</span>
+                Service Agreement
+              </h2>
+
+              {/* Collapsed Terms Preview */}
+              <div 
+                className="bg-white border-3 border-teal-200 rounded-xl p-4 mb-4 cursor-pointer hover:border-teal-400 transition-colors"
+                onClick={() => setShowTerms(!showTerms)}
+              >
+                <div className="flex justify-between items-center">
+                  <p className="font-bold text-teal-900">Terms of Service</p>
+                  <span className={`text-teal-500 transition-transform ${showTerms ? 'rotate-180' : ''}`}>
+                    ▼
+                  </span>
+                </div>
+                
+                {showTerms && (
+                  <div className="mt-4 pt-4 border-t border-teal-200 text-sm text-teal-700 space-y-3 max-h-64 overflow-y-auto">
+                    <p><strong>1. Services.</strong> Job Wingman ("JW") agrees to provide the job search services selected above for the duration specified. Services include resume writing, job applications, and any add-ons selected.</p>
+                    
+                    <p><strong>2. What We Do.</strong> We submit applications on your behalf to positions matching your criteria. We target a minimum of 400 applications per month of service. We cannot guarantee interviews or job offers, as hiring decisions are made by employers.</p>
+                    
+                    <p><strong>3. What You Do.</strong> You agree to provide accurate information about your background, respond to our communications within 48 hours, and notify us of any interviews or offers received.</p>
+                    
+                    <p><strong>4. Payment.</strong> A deposit is required before services begin. For payment plans, remaining installments begin one week after applications go live. We accept Zelle and Venmo.</p>
+                    
+                    <p><strong>5. Refunds.</strong> Resume services are non-refundable once work begins. Application services may be paused but are non-refundable. If you land a job, unused months can be credited toward future services.</p>
+                    
+                    <p><strong>6. Timeline.</strong> Resume drafts delivered within 3 weeks. Applications begin within 48 hours of receiving your approved resume and intake form.</p>
+                    
+                    <p><strong>7. Communication.</strong> We provide weekly updates on application activity. You can reach us via email or text for questions.</p>
+                    
+                    <p><strong>8. Results Disclaimer.</strong> While we work hard to maximize your interview opportunities, job search outcomes depend on many factors outside our control including market conditions, your qualifications, and employer decisions.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Agreement Checkbox */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative mt-1">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <div className={`w-6 h-6 border-3 rounded-lg transition-all ${
+                    agreed 
+                      ? 'bg-teal-500 border-teal-900' 
+                      : 'bg-white border-teal-300 group-hover:border-teal-500'
+                  }`}>
+                    {agreed && (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <span className="text-teal-700 text-sm">
+                  I have read and agree to the <button type="button" onClick={(e) => { e.preventDefault(); setShowTerms(true); }} className="text-teal-600 underline font-bold hover:text-teal-800">Terms of Service</button>. I understand that Job Wingman will apply to jobs on my behalf and that results are not guaranteed.
+                </span>
+              </label>
+            </div>
+
+            {/* Email & Confirm Card */}
+            <div className="bg-cream border-4 border-teal-900 rounded-2xl p-6 shadow-[6px_6px_0px_0px_rgba(19,78,74,1)]">
+              <h2 className="font-black text-teal-900 text-lg mb-4 flex items-center gap-2">
+                <span className="w-8 h-8 bg-yellow-300 border-2 border-teal-900 rounded-lg flex items-center justify-center">✉️</span>
+                Your Email
+              </h2>
+
+              <p className="text-teal-600 text-sm mb-4">
+                We'll send your agreement receipt and next steps here.
+              </p>
+
+              <input
+                type="email"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full px-4 py-3 border-3 border-teal-200 rounded-xl text-teal-900 placeholder-teal-300 focus:outline-none focus:border-teal-500 transition-colors mb-4 bg-white"
+              />
+
+              <button
+                onClick={() => setOrderConfirmed(true)}
+                disabled={!agreed || !clientEmail.includes('@')}
+                className={`w-full py-4 rounded-xl font-black text-lg transition-all ${
+                  agreed && clientEmail.includes('@')
+                    ? 'bg-coral border-4 border-teal-900 text-white shadow-[4px_4px_0px_0px_rgba(19,78,74,1)] hover:shadow-[2px_2px_0px_0px_rgba(19,78,74,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-1 active:translate-y-1'
+                    : 'bg-teal-100 border-4 border-teal-200 text-teal-300 cursor-not-allowed'
+                }`}
+              >
+                Confirm & Continue →
+              </button>
+
+              <p className="text-xs text-teal-400 text-center mt-3">
+                By confirming, you agree to the terms above. Dated: {today}
+              </p>
+            </div>
+
+            {/* Back Button */}
+            <button 
+              onClick={() => setShowAgreement(false)}
+              className="w-full mt-4 py-3 text-teal-100 font-bold hover:text-white transition-colors"
+            >
+              ← Back to edit selections
+            </button>
           </div>
         </div>
       </>
@@ -1739,22 +1919,35 @@ export default function JobWingmanPortal() {
             
             {/* What happens next */}
             <div className="bg-white/10 rounded-2xl p-6">
-              <h4 className="font-bold text-white mb-4">What happens after you pay?</h4>
+              <h4 className="font-bold text-white mb-4">What happens next?</h4>
               <ol className="space-y-3">
                 <li className="flex gap-3 text-teal-100">
                   <span className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-teal-900 font-bold text-sm flex-shrink-0">1</span>
-                  <span>Your payment will be confirmed within a few hours</span>
+                  <span>Send your {paymentChoice === 'full' ? 'payment' : 'deposit'} using the info above</span>
                 </li>
                 <li className="flex gap-3 text-teal-100">
                   <span className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-teal-900 font-bold text-sm flex-shrink-0">2</span>
-                  <span>You'll get an onboarding form to fill out (target roles, preferences, etc.)</span>
+                  <span>Fill out the <strong>Intake Form</strong> — link is in your email</span>
                 </li>
                 <li className="flex gap-3 text-teal-100">
                   <span className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-teal-900 font-bold text-sm flex-shrink-0">3</span>
-                  <span>We start within 48 hours of receiving your form</span>
+                  <span>Once payment clears, we'll send you a link to schedule your <strong>Kickoff Call</strong> (15 min)</span>
+                </li>
+                <li className="flex gap-3 text-teal-100">
+                  <span className="w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-teal-900 font-bold text-sm flex-shrink-0">4</span>
+                  <span>We get started within 48 hours of the kickoff call</span>
                 </li>
               </ol>
             </div>
+            
+            {/* Email confirmation */}
+            {clientEmail && (
+              <div className="bg-white/10 rounded-2xl p-4 mt-4">
+                <p className="text-teal-100 text-sm">
+                  <span className="font-bold text-white">Agreement & next steps sent to:</span> {clientEmail}
+                </p>
+              </div>
+            )}
             
             {/* Questions */}
             <div className="text-center mt-8">
@@ -1765,7 +1958,10 @@ export default function JobWingmanPortal() {
             {/* Back button */}
             <div className="text-center mt-6">
               <button
-                onClick={() => setOrderConfirmed(false)}
+                onClick={() => {
+                  setOrderConfirmed(false);
+                  setShowAgreement(false);
+                }}
                 className="text-teal-200 hover:text-white transition text-sm"
               >
                 ← Go back and edit my package
