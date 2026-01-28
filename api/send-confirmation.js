@@ -9,7 +9,8 @@ export default async function handler(req, res) {
 
   const { 
     clientName, 
-    clientEmail, 
+    clientEmail,
+    accessCode,
     items, 
     total, 
     paymentType,
@@ -33,9 +34,16 @@ export default async function handler(req, res) {
 
   // Payment info
   const paymentHtml = paymentType === 'full' 
-    ? `<p style="font-size: 16px;"><strong>Amount Due:</strong> $${total}</p>`
-    : `<p style="font-size: 16px;"><strong>Deposit Due:</strong> $${deposit}<br>
-       <span style="color: #666;">Then ${installments} payments of $${installmentAmount} after we start</span></p>`;
+    ? `<p style="font-size: 18px; font-weight: bold; color: #14b8a6;">Total Due: $${total}</p>`
+    : `<p style="font-size: 18px; font-weight: bold; color: #14b8a6;">
+        Deposit Due Now: $${deposit}<br>
+        <span style="font-size: 14px; font-weight: normal; color: #666;">
+          Then ${installments} payments of $${installmentAmount}
+        </span>
+      </p>`;
+
+  // Memo instruction - use access code if available
+  const memoText = accessCode ? accessCode.toUpperCase() : 'JW Deposit';
 
   const emailHtml = `
 <!DOCTYPE html>
@@ -44,41 +52,42 @@ export default async function handler(req, res) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #134e4a; max-width: 600px; margin: 0 auto; padding: 20px;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #134e4a;">
   
   <div style="text-align: center; margin-bottom: 30px;">
-    <div style="display: inline-block; background: #14b8a6; color: white; font-weight: bold; font-size: 24px; width: 60px; height: 60px; line-height: 60px; border-radius: 12px;">JW</div>
-    <h1 style="margin: 15px 0 5px; color: #134e4a;">You're all set!</h1>
-    <p style="color: #5eead4; margin: 0;">Agreement confirmed</p>
+    <div style="display: inline-block; background: #14b8a6; color: white; font-weight: bold; padding: 12px 20px; border-radius: 12px; font-size: 18px;">
+      JW
+    </div>
+    <h1 style="margin: 20px 0 10px; color: #134e4a;">You're all set, ${clientName}!</h1>
+    <p style="color: #666; margin: 0;">Here's your Job Wingman service agreement</p>
   </div>
 
-  <div style="background: #f0fdfa; border: 2px solid #14b8a6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-    <h2 style="margin: 0 0 16px; color: #134e4a; font-size: 18px;">Hi ${clientName},</h2>
-    <p style="margin: 0 0 16px;">Thanks for choosing Job Wingman! Here's a summary of your package and next steps.</p>
-  </div>
-
-  <div style="background: #fff; border: 2px solid #e5e5e5; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-    <h3 style="margin: 0 0 16px; color: #134e4a;">📋 Your Package</h3>
+  <div style="background: #f0fdfa; border: 2px solid #14b8a6; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+    <h2 style="margin: 0 0 15px; font-size: 16px; color: #134e4a;">Your Package</h2>
     <table style="width: 100%; border-collapse: collapse;">
       ${itemsHtml}
       <tr>
-        <td style="padding: 12px 0 0; font-weight: bold; font-size: 18px;">Total</td>
-        <td style="padding: 12px 0 0; font-weight: bold; font-size: 18px; text-align: right;">$${total}</td>
+        <td style="padding: 12px 0 0; font-weight: bold;">Total</td>
+        <td style="padding: 12px 0 0; text-align: right; font-weight: bold; font-size: 18px;">$${total}</td>
       </tr>
     </table>
   </div>
 
-  <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-    <h3 style="margin: 0 0 16px; color: #134e4a;">💳 Payment</h3>
+  <div style="background: #fff; border: 2px solid #e5e5e5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+    <h2 style="margin: 0 0 15px; font-size: 16px; color: #134e4a;">Payment Details</h2>
     ${paymentHtml}
-    <p style="margin: 16px 0 8px;"><strong>Zelle:</strong> (628) 228-1964</p>
-    <p style="margin: 0 0 8px;"><strong>Venmo:</strong> @ChisomEgwuatu</p>
-    <p style="margin: 16px 0 0; font-size: 14px; color: #666;">Memo: JW - ${clientName}</p>
+    
+    <div style="background: #fef3c7; border-radius: 8px; padding: 15px; margin-top: 15px;">
+      <p style="margin: 0 0 8px; font-weight: bold; color: #92400e;">Send payment via Zelle:</p>
+      <p style="margin: 0; font-size: 18px; color: #134e4a;">(628) 228-1964</p>
+      <p style="margin: 5px 0 0; font-size: 12px; color: #666;">Will show as "Chisom Egwuatu"</p>
+      <p style="margin: 10px 0 0; font-weight: bold; color: #92400e;">Memo: <span style="font-family: monospace; background: #fff; padding: 2px 8px; border-radius: 4px;">${memoText}</span></p>
+    </div>
   </div>
 
-  <div style="background: #fff; border: 2px solid #e5e5e5; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-    <h3 style="margin: 0 0 16px; color: #134e4a;">✅ Next Steps</h3>
-    <ol style="margin: 0; padding-left: 20px;">
+  <div style="background: #fff; border: 2px solid #e5e5e5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+    <h2 style="margin: 0 0 15px; font-size: 16px; color: #134e4a;">Next Steps</h2>
+    <ol style="margin: 0; padding-left: 20px; color: #666;">
       <li style="margin-bottom: 12px;">Send your ${paymentType === 'full' ? 'payment' : 'deposit'} via Zelle or Venmo</li>
       <li style="margin-bottom: 12px;"><a href="https://forms.fillout.com/t/17S72kpyV1us" style="color: #14b8a6; font-weight: bold;">Fill out the Intake Form</a> (~10 min)</li>
       <li style="margin-bottom: 12px;">Once payment clears, we'll send you a link to schedule your <strong>Kickoff Call</strong> (15 min)</li>
@@ -86,8 +95,39 @@ export default async function handler(req, res) {
     </ol>
   </div>
 
+  <div style="background: #f9fafb; border: 1px solid #e5e5e5; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+      <span style="font-size: 16px; margin-right: 8px;">📋</span>
+      <h2 style="margin: 0; font-size: 14px; color: #134e4a; text-transform: uppercase; letter-spacing: 0.5px;">Service Agreement</h2>
+    </div>
+    
+    <div style="font-size: 12px; color: #666; line-height: 1.6;">
+      <p style="margin: 0 0 10px;"><strong>1. Services.</strong> Job Wingman ("JW") agrees to provide the job search services selected above for the duration specified. Services include resume writing, job applications, and any add-ons selected.</p>
+      
+      <p style="margin: 0 0 10px;"><strong>2. What We Do.</strong> We submit applications on your behalf to positions matching your criteria. We target a minimum of 400 applications per month of service. We cannot guarantee interviews or job offers, as hiring decisions are made by employers.</p>
+      
+      <p style="margin: 0 0 10px;"><strong>3. What You Do.</strong> You agree to provide accurate information about your background, respond to our communications within 48 hours, and notify us of any interviews or offers received.</p>
+      
+      <p style="margin: 0 0 10px;"><strong>4. Payment.</strong> A deposit is required before services begin. For payment plans, remaining installments begin one week after applications go live. We accept Zelle and Venmo.</p>
+      
+      <p style="margin: 0 0 10px;"><strong>5. Refunds.</strong> Resume services are non-refundable once work begins. Application services may be paused but are non-refundable. If you land a job, unused months can be credited toward future services.</p>
+      
+      <p style="margin: 0 0 10px;"><strong>6. Timeline.</strong> Resume drafts delivered within 3 weeks. Applications begin within 48 hours of receiving your approved resume and intake form.</p>
+      
+      <p style="margin: 0 0 10px;"><strong>7. Communication.</strong> We provide weekly updates on application activity. You can reach us via email for questions.</p>
+      
+      <p style="margin: 0 0 15px;"><strong>8. Results Disclaimer.</strong> While we work hard to maximize your interview opportunities, job search outcomes depend on many factors outside our control including market conditions, your qualifications, and employer decisions.</p>
+      
+      <div style="background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px; text-align: center;">
+        <p style="margin: 0; font-size: 11px; color: #666;">
+          <strong style="color: #134e4a;">${clientName}</strong> agreed to these terms on <strong style="color: #134e4a;">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
   <div style="text-align: center; color: #666; font-size: 14px; margin-top: 30px;">
-    <p>Questions? Reply to this email or text (628) 228-1964</p>
+    <p>Questions? Just reply to this email.</p>
     <p style="margin-top: 20px;">— The Job Wingman Team</p>
   </div>
 
@@ -96,7 +136,8 @@ export default async function handler(req, res) {
   `;
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    // Send to client
+    const clientResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -105,19 +146,39 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         from: 'Job Wingman <freda@thejobwingman.com>',
         to: clientEmail,
+        reply_to: 'thejobwingman@gmail.com',
         subject: `You're all set, ${clientName}! Here's your Job Wingman agreement`,
         html: emailHtml,
       }),
     });
 
-    const data = await response.json();
+    const clientData = await clientResponse.json();
 
-    if (!response.ok) {
-      console.error('Resend error:', data);
-      return res.status(500).json({ error: 'Failed to send email', details: data });
+    if (!clientResponse.ok) {
+      console.error('Resend error (client):', clientData);
+      return res.status(500).json({ error: 'Failed to send email', details: clientData });
     }
 
-    return res.status(200).json({ success: true, messageId: data.id });
+    // Send copy to Job Wingman
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Job Wingman <freda@thejobwingman.com>',
+        to: 'thejobwingman@gmail.com',
+        subject: `[Copy] New order from ${clientName} - $${total}`,
+        html: `<p><strong>New order received!</strong></p>
+               <p>Client: ${clientName} (${clientEmail})</p>
+               <p>Access Code: ${accessCode || 'N/A'}</p>
+               <hr>
+               ${emailHtml}`,
+      }),
+    });
+
+    return res.status(200).json({ success: true, messageId: clientData.id });
   } catch (error) {
     console.error('Email send error:', error);
     return res.status(500).json({ error: 'Failed to send email', details: error.message });
