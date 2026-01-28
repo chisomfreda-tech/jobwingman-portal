@@ -103,7 +103,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Job Wingman <onboarding@resend.dev>',
+        from: 'Job Wingman <freda@thejobwingman.com>',
         to: clientEmail,
         subject: `You're all set, ${clientName}! Here's your Job Wingman agreement`,
         html: emailHtml,
