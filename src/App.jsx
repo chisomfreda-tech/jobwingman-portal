@@ -407,66 +407,42 @@ export default function JobWingmanPortal() {
     try {
       // Only save to Supabase if we have a real client ID (not demo mode)
       if (clientId) {
-        // 1. Create client_order in Supabase
-        const orderData = {
-          client_id: clientId,
-          first_name: firstName,
-          last_name: lastName || null,
-          email: clientEmail,
-          items: JSON.stringify(items),
-          total_amount: total,
-          payment_type: paymentChoice === 'full' ? 'full' : 'installment',
-          deposit_amount: paymentChoice === 'full' ? total : paymentPlan.deposit,
-          num_installments: paymentChoice === 'full' ? 0 : paymentPlan.installments,
-          installment_amount: paymentChoice === 'full' ? null : paymentPlan.perInstallment,
-          status: 'pending',
-        };
-        
-        const { data: order, error: orderError } = await supabase
-          .from('client_orders')
-          .insert(orderData)
-          .select()
-          .single();
-        
-        if (orderError) {
-          console.error('Order creation error:', orderError);
-          // Continue anyway - don't block the user
-        }
-        
-        // 2. Create payment records
-        if (order) {
-          // Deposit payment
-          const depositDueDate = new Date();
-          depositDueDate.setDate(depositDueDate.getDate() + 3); // Due in 3 days
-          
-          await supabase.from('client_payments').insert({
-            order_id: order.id,
-            client_id: clientId,
-            description: paymentChoice === 'full' ? 'Full Payment' : 'Deposit',
-            amount: paymentChoice === 'full' ? total : paymentPlan.deposit,
-            due_date: depositDueDate.toISOString().split('T')[0],
-            status: 'upcoming',
+        // 1. Create order + payment schedule via server endpoint (bypasses RLS).
+        //    Direct browser inserts fail silently because RLS on client_orders/client_payments
+        //    restricts to authenticated admins — the portal uses anon.
+        try {
+          const orderRes = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientId,
+              firstName,
+              lastName: lastName || null,
+              email: clientEmail,
+              accessCode,
+              items,
+              total,
+              paymentType: paymentChoice,
+              deposit: paymentPlan.deposit,
+              installments: paymentPlan.installments,
+              installmentAmount: paymentPlan.perInstallment,
+            }),
           });
-          
-          // Installment payments (if payment plan)
-          if (paymentChoice === 'plan' && paymentPlan.installments > 0) {
-            for (let i = 1; i <= paymentPlan.installments; i++) {
-              const installmentDate = new Date();
-              installmentDate.setDate(installmentDate.getDate() + 7 + (i * 14)); // 7 days after start, then every 2 weeks
-              
-              await supabase.from('client_payments').insert({
-                order_id: order.id,
-                client_id: clientId,
-                description: `Installment ${i} of ${paymentPlan.installments}`,
-                amount: paymentPlan.perInstallment,
-                due_date: installmentDate.toISOString().split('T')[0],
-                status: 'upcoming',
-              });
-            }
+
+          const orderResult = await orderRes.json();
+          if (!orderRes.ok) {
+            console.error('Order creation failed:', orderResult);
+            // Don't block the user — we'll still send the email and show success.
+            // The order can be re-entered manually from the dashboard if needed.
+          } else if (orderResult.warning) {
+            console.warn('Order created with warning:', orderResult.warning);
           }
+        } catch (dbErr) {
+          console.error('Order endpoint error:', dbErr);
+          // Same as above — continue so the customer isn't blocked.
         }
-        
-        // 3. Send confirmation email
+
+        // 2. Send confirmation email (unchanged)
         try {
           await fetch('/api/send-confirmation', {
             method: 'POST',
@@ -489,7 +465,7 @@ export default function JobWingmanPortal() {
         }
       }
       
-      // 4. Show success screen (always - even for demo mode)
+      // 3. Show success screen (always - even for demo mode)
       setOrderConfirmed(true);
       
     } catch (err) {
