@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase client
+// Supabase client.
+//
+// The hardcoded fallbacks stay for now, deliberately. This repository is public, so the key
+// is published on GitHub rather than merely shipped in a browser bundle — but an anon key is
+// designed to be public; it is in every Supabase web app including Sift. It was only
+// dangerous in combination with a broken policy on `clients` (see handleLogin below), and
+// that is what is being fixed here. With the policy gone this key reads public job adverts
+// and nothing else.
+//
+// Removing the fallbacks is still worth doing, but only AFTER confirming
+// VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Vercel — otherwise this becomes a
+// live payment page that cannot reach its database, which is a worse outcome than tidy code.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://dpgisnslhirfljwerrci.supabase.co';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZ2lzbnNsaGlyZmxqd2VycmNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzE3MjYsImV4cCI6MjA4MzIwNzcyNn0.B0J6G-PIc3LvIrFR6jKeuyGyX6cizF5ECRyLJi4-kNI';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -343,12 +354,20 @@ export default function JobWingmanPortal() {
     setError('');
     
     try {
-      // Check Supabase for access code
-      const { data, error: dbError } = await supabase
-        .from('clients')
-        .select('id, first_name, last_name, email')
-        .eq('access_code', code)
-        .single();
+      // Look the code up through a function, not by selecting from `clients`.
+      //
+      // The policy that used to allow this read was:
+      //     USING ((auth.role() = 'anon') AND (access_code IS NOT NULL))
+      // which checks that a row HAS a code, not that the caller supplied the right one — a
+      // row-level policy cannot see the filter in the request. Every one of the 39 client
+      // records was therefore readable by anyone with the public key, including dates of
+      // birth, home addresses, phone numbers, race/ethnicity and disability status.
+      //
+      // client_by_access_code takes the code as an ARGUMENT, so it can actually compare it,
+      // and returns only the fields this page needs.
+      const { data: rows, error: dbError } = await supabase
+        .rpc('client_by_access_code', { p_code: code });
+      const data = Array.isArray(rows) ? rows[0] : rows;
       
       if (data) {
         // Found client in database
